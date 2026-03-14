@@ -1,0 +1,613 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1e2530;
+    --border: #2a3441;
+    --accent: #f0a500;
+    --accent2: #e05c00;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --danger: #f85149;
+    --success: #3fb950;
+    --warning: #d29922;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .logo-text { font-size: 18px; font-weight: 700; }
+  .logo-sub { font-size: 11px; color: var(--text-muted); font-weight: 300; }
+
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat-item {
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+  }
+  .stat-num { font-size: 20px; font-weight: 700; color: var(--accent); font-family: 'DM Mono', monospace; }
+  .stat-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Month filter */
+  .month-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .month-nav-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+  .month-tabs {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .month-tab {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-weight: 500;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .month-tab.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .month-tab:hover:not(.active) { border-color: var(--text-muted); color: var(--text); }
+  .month-tab.has-data { border-color: rgba(240,165,0,0.4); }
+  .month-tab.current-month:not(.active) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .search-wrap { flex: 1; min-width: 180px; position: relative; }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 9px 12px 9px 34px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap .sicon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-muted); }
+  .btn {
+    padding: 9px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #ffc125; transform: translateY(-1px); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .count-info { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface2); }
+  th {
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 12px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(240,165,0,0.04); }
+
+  .car-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: var(--surface2);
+    padding: 3px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* 만기일 표시 — 월/일만 */
+  .expiry-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .expiry-date.expired { color: var(--danger); }
+  .expiry-date.soon { color: var(--warning); }
+  .expiry-date.ok { color: var(--success); }
+
+  .day-badge {
+    font-size: 11px;
+    margin-left: 6px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .day-badge.expired { background: rgba(248,81,73,0.15); color: var(--danger); }
+  .day-badge.soon { background: rgba(210,153,34,0.15); color: var(--warning); }
+  .day-badge.ok { background: rgba(63,185,80,0.12); color: var(--success); }
+
+  .action-btns { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 28px; height: 28px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(240,165,0,0.08); }
+  .icon-btn.delete:hover { border-color: var(--danger); color: var(--danger); background: rgba(248,81,73,0.08); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 420px;
+    max-width: 95vw;
+    padding: 28px;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 22px; display: flex; align-items: center; gap: 8px; }
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+  .form-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(240,165,0,0.1); }
+
+  /* Month+Day picker */
+  .md-row { display: flex; gap: 10px; }
+  .md-row select {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .md-row select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(240,165,0,0.1); }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
+
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); }
+  .empty-state .eicon { font-size: 36px; margin-bottom: 10px; }
+  .empty-state p { font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🚗</div>
+    <div>
+      <div class="logo-text">다이렉트 자동차보험</div>
+      <div class="logo-sub">고객 관리 시스템</div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-num" id="total-count">0</div>
+      <div class="stat-label">전체 고객</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="this-month-count" style="color:var(--accent)">0</div>
+      <div class="stat-label">이번 달 만기</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="next-month-count" style="color:var(--warning)">0</div>
+      <div class="stat-label">다음 달 만기</div>
+    </div>
+  </div>
+</div>
+
+<!-- Month tabs -->
+<div class="month-nav">
+  <span class="month-nav-label">📅 월별 조회</span>
+  <div class="month-tabs" id="month-tabs"></div>
+</div>
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="sicon">🔍</span>
+    <input type="text" id="search-input" placeholder="이름, 연락처, 차량번호 검색...">
+  </div>
+  <button class="btn btn-secondary" onclick="exportCSV()">📥 CSV</button>
+  <button class="btn btn-primary" onclick="openModal()">+ 고객 추가</button>
+</div>
+
+<div class="count-info" id="count-info"></div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>이름</th>
+        <th>연락처</th>
+        <th>차량번호</th>
+        <th>만기일</th>
+      </tr>
+    </thead>
+    <tbody id="customer-tbody"></tbody>
+  </table>
+  <div class="empty-state" id="empty-state" style="display:none">
+    <div class="eicon">📋</div>
+    <p id="empty-msg">이 달에 만기인 고객이 없습니다.</p>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title"><span>🆕</span> <span id="modal-title-text">고객 추가</span></div>
+    <div class="form-group">
+      <label>이름 *</label>
+      <input class="form-input" id="f-name" placeholder="홍길동" maxlength="20">
+    </div>
+    <div class="form-group">
+      <label>연락처 *</label>
+      <input class="form-input" id="f-phone" placeholder="010-0000-0000" maxlength="13">
+    </div>
+    <div class="form-group">
+      <label>차량번호 *</label>
+      <input class="form-input" id="f-car" placeholder="12가 3456" maxlength="15" style="font-family:'DM Mono',monospace">
+    </div>
+    <div class="form-group">
+      <label>만기 월/일 *</label>
+      <div class="md-row">
+        <select id="f-month">
+          <option value="">월 선택</option>
+          <option>1월</option><option>2월</option><option>3월</option>
+          <option>4월</option><option>5월</option><option>6월</option>
+          <option>7월</option><option>8월</option><option>9월</option>
+          <option>10월</option><option>11월</option><option>12월</option>
+        </select>
+        <select id="f-day">
+          <option value="">일 선택</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveCustomer()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTH_DAYS = [31,29,31,30,31,30,31,31,30,31,30,31];
+const MONTHS_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+let customers = JSON.parse(localStorage.getItem('ins2_customers') || '[]');
+let currentMonth = new Date().getMonth() + 1; // 1~12, 0=전체
+let editIndex = -1;
+
+function save() { localStorage.setItem('ins2_customers', JSON.stringify(customers)); }
+
+// Build month tabs
+function buildMonthTabs() {
+  const wrap = document.getElementById('month-tabs');
+  const now = new Date().getMonth() + 1;
+  let html = `<button class="month-tab ${currentMonth===0?'active':''}" onclick="setMonth(0,this)">전체</button>`;
+  for (let m = 1; m <= 12; m++) {
+    const cnt = customers.filter(c => c.month === m).length;
+    const isCurrent = m === now;
+    const cls = [
+      currentMonth === m ? 'active' : '',
+      isCurrent && currentMonth !== m ? 'current-month' : '',
+      cnt > 0 && currentMonth !== m ? 'has-data' : ''
+    ].filter(Boolean).join(' ');
+    html += `<button class="month-tab ${cls}" onclick="setMonth(${m},this)">${MONTHS_KR[m-1]}${cnt>0?` <span style="font-size:10px;opacity:.7">${cnt}</span>`:''}</button>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function setMonth(m, el) {
+  currentMonth = m;
+  buildMonthTabs();
+  render();
+}
+
+function getDayStatus(month, day) {
+  const now = new Date();
+  const thisM = now.getMonth() + 1;
+  const thisD = now.getDate();
+  if (month < thisM || (month === thisM && day < thisD)) return 'expired';
+  if (month === thisM && day - thisD <= 30) return 'soon';
+  if (month === thisM + 1) return 'soon';
+  return 'ok';
+}
+
+function formatMD(month, day) {
+  return `${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
+}
+
+function render() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let list = customers.filter(c => {
+    const matchQ = c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.car.toLowerCase().includes(q);
+    const matchM = currentMonth === 0 || c.month === currentMonth;
+    return matchQ && matchM;
+  });
+
+  // Sort by day within month
+  list.sort((a,b) => a.month !== b.month ? a.month - b.month : a.day - b.day);
+
+  const tbody = document.getElementById('customer-tbody');
+  const empty = document.getElementById('empty-state');
+
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('empty-msg').textContent = currentMonth === 0
+      ? '등록된 고객이 없습니다.' : `${MONTHS_KR[currentMonth-1]}에 만기인 고객이 없습니다.`;
+  } else {
+    empty.style.display = 'none';
+    tbody.innerHTML = list.map(c => {
+      const realIdx = customers.indexOf(c);
+      const status = getDayStatus(c.month, c.day);
+      const now = new Date();
+      const target = new Date(now.getFullYear(), c.month - 1, c.day);
+      const diffDays = Math.floor((target - now) / 86400000);
+      let badge = '';
+      if (status === 'expired') badge = `<span class="day-badge expired">만기초과</span>`;
+      else if (status === 'soon') badge = `<span class="day-badge soon">D-${diffDays}</span>`;
+      else badge = `<span class="day-badge ok">D-${diffDays}</span>`;
+
+      const monthLabel = currentMonth === 0 ? `<span style="font-size:11px;color:var(--text-muted);margin-right:4px">${MONTHS_KR[c.month-1]}</span>` : '';
+
+      return `<tr>
+        <td><strong>${c.name}</strong></td>
+        <td style="color:var(--text-muted)">${c.phone}</td>
+        <td><span class="car-num">${c.car}</span></td>
+        <td>
+          ${monthLabel}<span class="expiry-date ${status}">${String(c.day).padStart(2,'0')}일</span>${badge}
+          <span style="display:none">
+            <button class="icon-btn" onclick="editCustomer(${realIdx})">✏️</button>
+            <button class="icon-btn delete" onclick="deleteCustomer(${realIdx})">🗑</button>
+          </span>
+        </td>
+      </tr>
+      <tr style="display:none" id="dummy-${realIdx}"></tr>`;
+    }).join('');
+
+    // Replace hidden action cells with proper td
+    tbody.innerHTML = list.map(c => {
+      const realIdx = customers.indexOf(c);
+      const status = getDayStatus(c.month, c.day);
+      const now = new Date();
+      const target = new Date(now.getFullYear(), c.month - 1, c.day);
+      const diffDays = Math.floor((target - now) / 86400000);
+      let badge = '';
+      if (status === 'expired') badge = `<span class="day-badge expired">만기초과</span>`;
+      else if (status === 'soon') badge = `<span class="day-badge soon">D-${diffDays}</span>`;
+      else badge = `<span class="day-badge ok">D-${diffDays}</span>`;
+      const monthLabel = currentMonth === 0 ? `<span style="font-size:11px;color:var(--text-muted);margin-right:4px">${MONTHS_KR[c.month-1]}</span>` : '';
+
+      return `<tr>
+        <td><strong>${c.name}</strong></td>
+        <td style="color:var(--text-muted)">${c.phone}</td>
+        <td><span class="car-num">${c.car}</span></td>
+        <td>${monthLabel}<span class="expiry-date ${status}">${String(c.day).padStart(2,'0')}일</span>${badge}</td>
+        <td><div class="action-btns">
+          <button class="icon-btn" onclick="editCustomer(${realIdx})" title="수정">✏️</button>
+          <button class="icon-btn delete" onclick="deleteCustomer(${realIdx})" title="삭제">🗑</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Stats
+  const now = new Date();
+  const thisM = now.getMonth() + 1;
+  const nextM = thisM === 12 ? 1 : thisM + 1;
+  document.getElementById('total-count').textContent = customers.length;
+  document.getElementById('this-month-count').textContent = customers.filter(c => c.month === thisM).length;
+  document.getElementById('next-month-count').textContent = customers.filter(c => c.month === nextM).length;
+  document.getElementById('count-info').textContent = `${list.length}명 표시 중 (전체 ${customers.length}명)`;
+}
+
+// Day select update
+document.getElementById('f-month').addEventListener('change', function() {
+  const mIdx = parseInt(this.value) - 1;
+  const daySelect = document.getElementById('f-day');
+  const prev = daySelect.value;
+  daySelect.innerHTML = '<option value="">일 선택</option>';
+  if (isNaN(mIdx)) return;
+  const max = MONTH_DAYS[mIdx];
+  for (let d = 1; d <= max; d++) {
+    daySelect.innerHTML += `<option value="${d}">${d}일</option>`;
+  }
+  if (prev) daySelect.value = prev;
+});
+
+function openModal() {
+  editIndex = -1;
+  document.getElementById('modal-title-text').textContent = '고객 추가';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-phone').value = '';
+  document.getElementById('f-car').value = '';
+  document.getElementById('f-month').value = '';
+  document.getElementById('f-day').innerHTML = '<option value="">일 선택</option>';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function editCustomer(idx) {
+  editIndex = idx;
+  const c = customers[idx];
+  document.getElementById('modal-title-text').textContent = '고객 수정';
+  document.getElementById('f-name').value = c.name;
+  document.getElementById('f-phone').value = c.phone;
+  document.getElementById('f-car').value = c.car;
+  document.getElementById('f-month').value = String(c.month);
+  // trigger day update
+  document.getElementById('f-month').dispatchEvent(new Event('change'));
+  setTimeout(() => { document.getElementById('f-day').value = String(c.day); }, 10);
+  document.getElementById('modal').classList.add('open');
+}
+
+function saveCustomer() {
+  const name = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const car = document.getElementById('f-car').value.trim();
+  const month = parseInt(document.getElementById('f-month').value);
+  const day = parseInt(document.getElementById('f-day').value);
+  if (!name || !phone || !car || isNaN(month) || isNaN(day)) { alert('모든 항목을 입력해주세요.'); return; }
+  const obj = { name, phone, car, month, day };
+  if (editIndex >= 0) customers[editIndex] = obj;
+  else customers.push(obj);
+  save(); buildMonthTabs(); closeModal(); render();
+}
+
+function deleteCustomer(idx) {
+  if (!confirm(`"${customers[idx].name}" 고객을 삭제하시겠습니까?`)) return;
+  customers.splice(idx, 1);
+  save(); buildMonthTabs(); render();
+}
+
+function exportCSV() {
+  if (!customers.length) { alert('내보낼 데이터가 없습니다.'); return; }
+  const header = '이름,연락처,차량번호,만기월,만기일';
+  const rows = customers.map(c => `${c.name},${c.phone},${c.car},${c.month}월,${c.day}일`);
+  const csv = '\uFEFF' + [header, ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = '보험고객목록.csv';
+  a.click();
+}
+
+document.getElementById('f-phone').addEventListener('input', function() {
+  let v = this.value.replace(/\D/g,'');
+  if (v.length <= 3) this.value = v;
+  else if (v.length <= 7) this.value = v.slice(0,3)+'-'+v.slice(3);
+  else this.value = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+});
+document.getElementById('search-input').addEventListener('input', render);
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target===this) closeModal(); });
+
+// Sample data
+if (!customers.length) {
+  customers = [
+    { name: '김민준', phone: '010-1234-5678', car: '123가 4567', month: 3, day: 10 },
+    { name: '이서연', phone: '010-2345-6789', car: '456나 7890', month: 3, day: 28 },
+    { name: '박도윤', phone: '010-3456-7890', car: '789다 0123', month: 5, day: 15 },
+    { name: '최지아', phone: '010-4567-8901', car: '321라 6540', month: 3, day: 20 },
+  ];
+  save();
+}
+
+buildMonthTabs();
+render();
+</script>
+</body>
+</html>
